@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/Projektmappenelemente/">
+    <File Path="Resource/Staedte.db" />
+  </Folder>
+  <Project Path="CityMatch.csproj" Id="bfcc3462-8042-4852-8600-20e09a9de981" />
+</Solution>
