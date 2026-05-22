@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -30,16 +31,50 @@ namespace CityMatch
                 BegrüßungsText.Visibility = Visibility.Collapsed;
             }
 
-            
             NachrichtHinzufuegen(eingabe, true);
             EingabeBox.Clear();
+
+            if (eingabe.Length < 10)
+            {
+                NachrichtHinzufuegen("Bitte beschreiben Sie die Reisewünsche mit mindestens einem Satz", false);
+                return;
+            }
+            else if (eingabe.Length >= 200)
+            {
+                NachrichtHinzufuegen("Bitte fassen Sie sich kürzer, die Anfrage konnte nicht verarbeitet werden", false);
+                return;
+            }
 
             // Lade-Anzeige hinzufügen und Referenz merken
             var ladeBubble = NachrichtHinzufuegenMitRueckgabe("Suche läuft...", false);
 
+            // KI-Antwort holen
             string antwortJson = await ollama.FrageStellen(eingabe);
-            SuchKriterien kriterien = JsonSerializer.Deserialize<SuchKriterien>(antwortJson);
 
+            // Lade-Bubble entfernen, sobald die Antwort da ist
+            ChatPanel.Children.Remove(ladeBubble);
+
+            // JSON parsen mit try/catch
+            SuchKriterien kriterien;
+            try
+            {
+                kriterien = JsonSerializer.Deserialize<SuchKriterien>(antwortJson);
+            }
+            catch (JsonException ex)
+            {
+                NachrichtHinzufuegen("Die KI hat eine ungültige Antwort geliefert. Bitte versuchen Sie es erneut.", false);
+                System.Diagnostics.Debug.WriteLine($"JSON-Fehler: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Rohantwort: {antwortJson}");
+                return;
+            }
+
+            if (kriterien == null)
+            {
+                NachrichtHinzufuegen("Die KI hat keine verwertbare Antwort geliefert. Bitte versuchen Sie es erneut.", false);
+                return;
+            }
+
+            // Tags sammeln
             var alleTags = new List<string>();
             alleTags.AddRange(kriterien.klima);
             alleTags.AddRange(kriterien.landschaft);
@@ -47,40 +82,41 @@ namespace CityMatch
             alleTags.AddRange(kriterien.kultur);
             alleTags.AddRange(kriterien.aktivitaet);
             alleTags.AddRange(kriterien.kueche);
+            alleTags.AddRange(kriterien.groesse);
 
+            // Debug-Ausgabe im Chat
+            NachrichtHinzufuegen(
+                "[Debug] Erkannte Tags:\n" +
+                $"Klima: {string.Join(", ", kriterien.klima)}\n" +
+                $"Landschaft: {string.Join(", ", kriterien.landschaft)}\n" +
+                $"Charakter: {string.Join(", ", kriterien.charakter)}\n" +
+                $"Kultur: {string.Join(", ", kriterien.kultur)}\n" +
+                $"Aktivität: {string.Join(", ", kriterien.aktivitaet)}\n" +
+                $"Küche: {string.Join(", ", kriterien.kueche)}\n" +
+                $"Größe: {string.Join(", ", kriterien.groesse)}",
+                false);
+
+            // Datenbank abfragen
             var db = new DatenbankZugriff();
             var ergebnisse = db.FindeStaedte(alleTags);
 
-            ErgebnisPanel.Children.Clear();
-            int rang = 1;
-            foreach (var (stadt, land, score) in ergebnisse)
-            {
-                EreignisHinzufuegen(rang, stadt, land, score);
-                rang++;
-            }
-
-            // Lade-Anzeige entfernen
-            ChatPanel.Children.Remove(ladeBubble);
-            if (eingabe.Length < 10) 
-            {
-                NachrichtHinzufuegen("Bitte beschreiben Sie die Reisewünsche mit mindestens einem Satz", false);
-            }
-            else if (eingabe.Length >= 200)
-            {
-                NachrichtHinzufuegen("Bitte fassen Sie sich kürzer, die Anfrage konnte nicht verarbeitet werden", false);
-            }
-            else if(ergebnisse.Count == 0)
+            if (ergebnisse.Count == 0)
             {
                 NachrichtHinzufuegen("Es konnten keine Ziele gefunden werden, bitte versuchen Sie eine andere Beschreibung", false);
+                return;
             }
-
             else
             {
                 NachrichtHinzufuegen("Hier sind die " + ergebnisse.Count + " besten Ziele:", false);
             }
-           
-            
 
+            ErgebnisPanel.Children.Clear();
+            int rang = 1;
+            foreach (var (stadt, land, score, fehlendeTags) in ergebnisse)
+            {
+                EreignisHinzufuegen(rang, stadt, land, score, fehlendeTags);
+                rang++;
+            }
         }
 
         private void EingabeBox_KeyDown(object sender, KeyEventArgs e)
@@ -90,6 +126,22 @@ namespace CityMatch
                 SuchenButton_Click(sender, e);
                 e.Handled = true;
             }
+        }
+
+        // Hilfsmethode: erzeugt eine TextBox, die wie ein TextBlock aussieht, aber Markieren erlaubt
+        private TextBox MarkierbaresTextfeld(string text, double fontSize = 15)
+        {
+            return new TextBox
+            {
+                Text = text,
+                FontSize = fontSize,
+                TextWrapping = TextWrapping.Wrap,
+                IsReadOnly = true,
+                BorderThickness = new Thickness(0),
+                Background = Brushes.Transparent,
+                Padding = new Thickness(0),
+                Cursor = Cursors.Arrow
+            };
         }
 
         private void NachrichtHinzufuegen(string text, bool istUser)
@@ -102,12 +154,7 @@ namespace CityMatch
                 Margin = new Thickness(5),
                 MaxWidth = 400,
                 HorizontalAlignment = istUser ? HorizontalAlignment.Right : HorizontalAlignment.Left,
-                Child = new TextBlock
-                {
-                    Text = text,
-                    FontSize = 15,
-                    TextWrapping = TextWrapping.Wrap
-                }
+                Child = MarkierbaresTextfeld(text)
             };
 
             ChatPanel.Children.Add(bubble);
@@ -124,12 +171,7 @@ namespace CityMatch
                 Margin = new Thickness(5),
                 MaxWidth = 400,
                 HorizontalAlignment = istUser ? HorizontalAlignment.Right : HorizontalAlignment.Left,
-                Child = new TextBlock
-                {
-                    Text = text,
-                    FontSize = 15,
-                    TextWrapping = TextWrapping.Wrap
-                }
+                Child = MarkierbaresTextfeld(text)
             };
 
             ChatPanel.Children.Add(bubble);
@@ -137,38 +179,29 @@ namespace CityMatch
             return bubble;
         }
 
-        private void EreignisHinzufuegen(int rang, string stadt, string land, int prozent)
+        private void EreignisHinzufuegen(int rang, string stadt, string land, int prozent, List<string> fehlendeTags)
         {
-            var zeile = new Grid { Margin = new Thickness(0, 5, 0, 15) };
+            // Container für die ganze Zeile (Hauptzeile + optionale Warnzeile)
+            var container = new StackPanel { Margin = new Thickness(0, 5, 0, 15) };
+
+            // Hauptzeile mit Rang/Stadt/Land/Prozent
+            var zeile = new Grid();
             zeile.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(50) });
             zeile.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
             zeile.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
             zeile.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
 
-            var rangText = new TextBlock
-            {
-                Text = rang.ToString(),
-                FontSize = 20,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            var stadtText = new TextBlock
-            {
-                Text = stadt.ToString(),
-                FontSize = 20,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            var landText = new TextBlock
-            {
-                Text = land.ToString(),
-                FontSize = 20,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            var prozentText = new TextBlock
-            {
-                Text = prozent.ToString() + "%",
-                FontSize = 20,
-                VerticalAlignment = VerticalAlignment.Center
-            };
+            var rangText = MarkierbaresTextfeld(rang.ToString(), 20);
+            rangText.VerticalAlignment = VerticalAlignment.Center;
+
+            var stadtText = MarkierbaresTextfeld(stadt, 20);
+            stadtText.VerticalAlignment = VerticalAlignment.Center;
+
+            var landText = MarkierbaresTextfeld(land, 20);
+            landText.VerticalAlignment = VerticalAlignment.Center;
+
+            var prozentText = MarkierbaresTextfeld(prozent.ToString() + "%", 20);
+            prozentText.VerticalAlignment = VerticalAlignment.Center;
 
             Grid.SetColumn(rangText, 0);
             zeile.Children.Add(rangText);
@@ -179,7 +212,29 @@ namespace CityMatch
             Grid.SetColumn(prozentText, 3);
             zeile.Children.Add(prozentText);
 
-            ErgebnisPanel.Children.Add(zeile);
+            container.Children.Add(zeile);
+
+            // Warnzeile mit fehlenden Tags, nur wenn welche fehlen
+            if (fehlendeTags != null && fehlendeTags.Count > 0)
+            {
+                var warnText = new TextBox
+                {
+                    Text = "⚠ Abstriche: " + string.Join(", ", fehlendeTags),
+                    FontSize = 13,
+                    FontStyle = FontStyles.Italic,
+                    Foreground = Brushes.DarkOrange,
+                    Margin = new Thickness(50, 2, 0, 0),
+                    TextWrapping = TextWrapping.Wrap,
+                    IsReadOnly = true,
+                    BorderThickness = new Thickness(0),
+                    Background = Brushes.Transparent,
+                    Padding = new Thickness(0),
+                    Cursor = Cursors.Arrow
+                };
+                container.Children.Add(warnText);
+            }
+
+            ErgebnisPanel.Children.Add(container);
         }
     }
 }

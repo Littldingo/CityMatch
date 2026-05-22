@@ -14,5 +14,6 @@ namespace CityMatch
         public List<string> kultur { get; set; } = new List<string>();
         public List<string> aktivitaet { get; set; } = new List<string>();
         public List<string> kueche { get; set; } = new List<string>();
+        public List<string> groesse { get; set; } = new List<string>();
     }
 }

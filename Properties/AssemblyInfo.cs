@@ -8,9 +8,9 @@ using System.Windows;
 // Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
 // die einer Assembly zugeordnet sind.
 [assembly: AssemblyTitle("CityMatch")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("KI Gestützte Anwendung zur Auswahl von Reisezielen im Reisebüro")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Horizontia GmbH")]
 [assembly: AssemblyProduct("CityMatch")]
 [assembly: AssemblyCopyright("Copyright ©  2026")]
 [assembly: AssemblyTrademark("")]

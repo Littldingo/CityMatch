@@ -7,60 +7,58 @@
         mc:Ignorable="d"
         FontFamily="Calibri"
         Title="CityMatch – Horizontia Reisen GmbH" 
-        Height="800" 
-        Width="1200" 
+        Height="600" 
+        Width="1000" 
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Icon="/Resource/Horizontia.ico">
         
-    <Grid>
+    <Grid Height="Auto" MinHeight="640">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-
-        <TextBlock Grid.Column="1" Margin="10" TextAlignment="Left" FontSize="40" FontWeight="Bold" Text="Suchergebnisse:"/>
-        <StackPanel Orientation="Horizontal">
-            <Image Margin="-20" Grid.Column="0" Source="/Resource/FirmenLogo_Horizontia_Final.png" VerticalAlignment="Top" Height="100"/>
+        
+            <TextBlock Grid.Column="1" Margin="10,10,0,0" TextAlignment="Left" FontSize="40" FontWeight="Bold" Text="Suchergebnisse:"/>
+        
+            <StackPanel Orientation="Horizontal">
+                <Image Margin="-20" Grid.Column="0" Source="/Resource/FirmenLogo_Horizontia_Final.png" VerticalAlignment="Top" Height="100"/>
             
-        </StackPanel>
-        <StackPanel Grid.Column="0">            
+            </StackPanel>
+            <StackPanel Grid.Column="0">            
             
-            <Border BorderBrush="#CCC" BorderThickness="1" Background="#F5F5F5" CornerRadius="5" Margin="10,75,10,10">
-                <ScrollViewer BorderBrush="#CCC" BorderThickness="1" Background="AliceBlue" Height="400" x:Name="ChatScroll" VerticalScrollBarVisibility="Visible">
-                    <Grid>
-                        <TextBlock x:Name="BegrüßungsText" FontSize="30">
-                            Hallo mein Name ist Egon!
-                        <LineBreak/>
-                         Geben Sie hier die Kundenwünsche ein
-                        </TextBlock>
-                        <StackPanel x:Name="ChatPanel" Margin="10"/>
-                    </Grid>
-                </ScrollViewer>
-            </Border>
-
-            <TextBlock Text="Eingabe:" FontSize="20"/>
-            
-            <Border BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Margin="10">
-                <TextBox PreviewKeyDown="EingabeBox_KeyDown" AcceptsReturn="True" FontSize="20" x:Name="EingabeBox" Background ="AliceBlue" BorderThickness="0" Width="auto" Height="165" TextWrapping="Wrap"/>
-            </Border>
-            
-            
-                
-                <Border Width="100" CornerRadius="5" BorderBrush="Gray" BorderThickness="2" Background="DarkBlue" Padding="1">
-                    <Button FontSize="18" Click="SuchenButton_Click" x:Name="suchenButton_Click" BorderThickness="0" Width="100" Height="30" Background="darkBlue" Foreground="LightGray">Suchen</Button>
+                <Border BorderBrush="#CCC" BorderThickness="1" Background="#F5F5F5" CornerRadius="5" Margin="20,75,10,20" MinHeight="200">
+                    <ScrollViewer BorderBrush="#CCC" BorderThickness="1" Background="AliceBlue" Height="250"  x:Name="ChatScroll" VerticalScrollBarVisibility="Visible">
+                        <Grid>
+                            <TextBlock x:Name="BegrüßungsText" FontSize="25">
+                                Hallo mein Name ist Egon!
+                            <LineBreak/>
+                             Geben Sie hier die Kundenwünsche ein.
+                            </TextBlock>
+                            <StackPanel x:Name="ChatPanel" Margin="10"/>
+                        </Grid>
+                    </ScrollViewer>
                 </Border>
-                
+
+                <TextBlock Margin="10,0,0,10" Text="Anforderungen des Kunden:" FontSize="20"/>
             
+                <Border  Background="AliceBlue" BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Margin="20,0,10,20" Height="90" Width="Auto">
+                <TextBox Margin="0,0,10,0" Width="Auto" Height="90" PreviewKeyDown="EingabeBox_KeyDown" AcceptsReturn="True" FontSize="20" x:Name="EingabeBox" Background ="AliceBlue" BorderThickness="0" TextWrapping="Wrap"/>
+                </Border>
+
+                <Border Margin="0,0,0,20" Width="100" Height="Auto" CornerRadius="5" BorderBrush="Gray" BorderThickness="2" Background="DarkBlue" Padding="1">
+                    <Button  FontSize="18" Click="SuchenButton_Click" x:Name="suchenButton_Click" BorderThickness="0" Width="100" Height="30" Background="darkBlue" Foreground="LightGray">Suchen</Button>
+                </Border>
+
         </StackPanel>
         
 
-        <Border Grid.Column="1" BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Margin="10,75,10,70">
-            <StackPanel Background="AliceBlue" Height="640">
+            <Border Height="400" MinHeight="200" Grid.Column="1" BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Margin="10,0,30,100">
+                            
+                    <StackPanel MinHeight="200" Height="400" Background="AliceBlue" x:Name="ErgebnisPanel"/>                
                
-                <StackPanel Margin="10,0,0,0" x:Name="ErgebnisPanel"/>                
-            </StackPanel>
-        </Border>
+            </Border>
 
 
     </Grid>
