@@ -79,5 +79,34 @@ namespace CityMatch
             }
             return ergebnisse;
         }
+            public Dictionary<string, List<string>> SynonymeLaden()
+        {
+            var map = new Dictionary<string, List<string>>();
+
+            using (var conn = new SQLiteConnection(verbindung))
+            {
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = @"
+            SELECT t.name, sy.name
+            FROM tag_synonyme sy
+            JOIN tag t ON t.tag_id = sy.tag_id";
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string tag = reader.GetString(0);
+                        string synonym = reader.GetString(1);
+
+                        if (!map.ContainsKey(tag))
+                            map[tag] = new List<string>();
+
+                        map[tag].Add(synonym);
+                    }
+                }
+            }
+            return map;
+        }
     }
-}
+    }

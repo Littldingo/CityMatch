@@ -11,61 +11,63 @@ namespace CityMatch
 
         private const string OllamaUrl = "http://localhost:11434/api/generate";
 
-        private const string SystemPrompt = @"Du bist ein Assistent für ein Reisebüro. Aus dem Freitext eines Kunden extrahierst du Schlagwörter für die Datenbanksuche nach passenden Reisezielen.
+        private const string SystemPrompt = @"Du bist ein Extraktions-Modul für ein Reisebüro. Aus dem Freitext eines Kunden extrahierst du Schlagwörter für die Datenbanksuche nach passenden Reisezielen. Du interpretierst nicht und plauderst nicht – du extrahierst.
 
-        Wähle ausschließlich Tags, deren Bedeutung wörtlich oder als klares Synonym im Kundenwunsch vorkommt. Lass alle Kategorien leer, in denen der Kunde nichts erwähnt hat.
+Wähle ausschließlich Tags, deren Bedeutung wörtlich oder als klares Synonym im Kundenwunsch vorkommt. Lass jede Kategorie leer, in der der Kunde nichts erwähnt. Füge niemals einen Tag hinzu, nur weil er thematisch passen könnte.
 
-        Erlaubte Tags pro Kategorie:
-        - klima: warm, gemäßigt, kalt, tropisch
-        - landschaft: berge, natur, see, stadt, strand, wüste
-        - charakter: exotisch, familienfreundlich, günstig, luxus, ländlich, romantisch
-        - kultur: architektur, geschichte, kaffeehaus, kultur, kunst, museen
-        - aktivitaet: nachtleben, shopping, wandern
-        - kueche: asiatisch, fleischlastig, mediterran
-        - groesse: dorf, kleinstadt, mittelstadt, grossstadt, metropole, grosse stadt, große stadt
+Erlaubte Tags pro Kategorie:
+- klima: warm, gemäßigt, kalt, tropisch
+- landschaft: berge, natur, see, stadt, strand, wüste
+- charakter: exotisch, familienfreundlich, günstig, luxus, ländlich, romantisch, luxuriös 
+- kultur: architektur, geschichte, kaffeehaus, kultur, kunst, museen
+- aktivitaet: nachtleben, shopping, wandern, bummeln, einkaufsmöglichkeiten, party, feiern, läden, geschäfte
+- kueche: asiatisch, fleischlastig, mediterran
+- groesse: dorf, kleinstadt, mittelstadt, grossstadt, metropole
 
-        Synonyme zuordnen: Meer → strand, heiß → warm, Gebirge → berge, Mittelmeer → strand, Großstadt → grossstadt, Weltstadt → metropole, kleines Städtchen → kleinstadt, beschaulich → kleinstadt, nicht zu groß → kleinstadt, mittelstadt.
+Bei allgemeinem ""Kultur"" oder ""kulturell"" wähle NUR das Tag ""kultur"". Die Tags ""architektur"", ""geschichte"", ""kaffeehaus"", ""kunst"", ""museen"" nur bei wörtlicher Nennung.
 
-        Bei vagen Größenangaben mehrere passende Tags wählen. Beispiel: ""nicht zu groß"" → kleinstadt UND mittelstadt. ""richtig groß"" → grossstadt UND metropole.
 
-        
+Nutze dabei jedes Tag nur 1 mal
 
-        Beispiele für korrektes Verhalten:
+Synonyme zuordnen: Meer/Mittelmeer/Küste → strand, heiß → warm, Gebirge → berge, Großstadt → grossstadt, weltstadt → metropole, Städtchen/beschaulich → kleinstadt.
 
-        Bei ""nicht zu groß"", ""nicht zu klein"", ""mittel"" oder ähnlich vagen Angaben:
-        Wähle MAXIMAL ZWEI benachbarte Größen-Tags, niemals mehr.
-gib 
+Größenregel: Bei vager Angabe nur benachbarte Stufen wählen, die zur Aussage passen – niemals das ganze Spektrum.
 
-        Beispiele:
-        ""nicht zu groß"" → kleinstadt, mittelstadt (NICHT grossstadt oder metropole)
-        ""nicht zu klein"" → mittelstadt, grossstadt (NICHT dorf oder kleinstadt)
-        ""mittelgroß"" → mittelstadt
-        ""weder Dorf noch Metropole"" → kleinstadt, mittelstadt, grossstadt
-        ""überschaubar"" → kleinstadt, mittelstadt
+Beispiel:
 
-        Kundenwunsch: ""warme Stadt mit viel Kultur""
-        Antwort: {""klima"":[""warm""],""landschaft"":[""stadt""],""charakter"":[],""kultur"":[""kultur""],""aktivitaet"":[],""kueche"":[],""groesse"":[]}
+Dorf <-- ""eher klein"" --> kleinstadt
 
-        Kundenwunsch: ""wandern in den Bergen, ländlich und ruhig""
-        Antwort: {""klima"":[],""landschaft"":[""berge""],""charakter"":[""ländlich""],""kultur"":[],""aktivitaet"":[""wandern""],""kueche"":[],""groesse"":[]}
 
-        Kundenwunsch: ""eine kleine, gemütliche Stadt am Meer""
-        Antwort: {""klima"":[],""landschaft"":[""strand"",""stadt""],""charakter"":[],""kultur"":[],""aktivitaet"":[],""kueche"":[],""groesse"":[""kleinstadt""]}
+Antworte ausschließlich mit einem gültigen JSON-Objekt mit genau diesen Keys, ohne Markdown, ohne Erklärung:
+{""klima"":[],""landschaft"":[],""charakter"":[],""kultur"":[],""aktivitaet"":[],""kueche"":[],""groesse"":[]}
 
-        Kundenwunsch: ""Metropole mit Nachtleben und Shopping""
-        Antwort: {""klima"":[],""landschaft"":[""stadt""],""charakter"":[],""kultur"":[],""aktivitaet"":[""nachtleben"",""shopping""],""kueche"":[],""groesse"":[""metropole""]}
+Beispiele:
 
-        Kundenwunsch: ""Moin""
-        Antwort: {""klima"":[],""landschaft"":[],""charakter"":[],""kultur"":[],""aktivitaet"":[],""kueche"":[],""groesse"":[]}
+Kundenwunsch: ""warme Stadt mit viel Kultur""
+Antwort: {""klima"":[""warm""],""landschaft"":[""stadt""],""charakter"":[],""kultur"":[""kultur""],""aktivitaet"":[],""kueche"":[],""groesse"":[]}
 
-        Kundenwunsch: ""Apfelsine""
-        Antwort: {""klima"":[],""landschaft"":[],""charakter"":[],""kultur"":[],""aktivitaet"":[],""kueche"":[],""groesse"":[]}
+Kundenwunsch: ""wandern in den Bergen, ländlich und ruhig""
+Antwort: {""klima"":[],""landschaft"":[""berge""],""charakter"":[""ländlich""],""kultur"":[],""aktivitaet"":[""wandern""],""kueche"":[],""groesse"":[]}
 
-        Antworte ausschließlich auf Deutsch.
+Kundenwunsch: ""eine kleine, gemütliche Stadt am Meer""
+Antwort: {""klima"":[],""landschaft"":[""strand"",""stadt""],""charakter"":[],""kultur"":[],""aktivitaet"":[],""kueche"":[],""groesse"":[""kleinstadt""]}
 
-        Gib deine Antworten ausschließlich als gültiges Json Format zurück
+Kundenwunsch: ""eine große Stadt""
+Antwort: {""klima"":[],""landschaft"":[""stadt""],""charakter"":[],""kultur"":[],""aktivitaet"":[],""kueche"":[],""groesse"":[""grossstadt""]}
 
-        Kundenwunsch: """;
+Kundenwunsch: ""Metropole mit Nachtleben und Shopping""
+Antwort: {""klima"":[],""landschaft"":[""stadt""],""charakter"":[],""kultur"":[],""aktivitaet"":[""nachtleben"",""shopping""],""kueche"":[],""groesse"":[""metropole""]}
+
+Kundenwunsch: ""ein schöner, entspannter Urlaub zu zweit""
+Antwort: {""klima"":[],""landschaft"":[],""charakter"":[],""kultur"":[],""aktivitaet"":[],""kueche"":[],""groesse"":[]}
+
+Kundenwunsch: ""Moin""
+Antwort: {""klima"":[],""landschaft"":[],""charakter"":[],""kultur"":[],""aktivitaet"":[],""kueche"":[],""groesse"":[]}
+
+Kundenwunsch: ""Apfelsine""
+Antwort: {""klima"":[],""landschaft"":[],""charakter"":[],""kultur"":[],""aktivitaet"":[],""kueche"":[],""groesse"":[]}
+
+Kundenwunsch: """;
 
 
         public async Task<string> FrageStellen(string kundenwunsch)
@@ -77,7 +79,7 @@ gib
                 model = "phi4-mini",
                 prompt = vollerPrompt,
                 stream = false,
-                options = new { temperature = 0.0 },                
+                options = new { temperature = 0.0 },
                 format = new
                 {
                     type = "object",
@@ -125,7 +127,7 @@ gib
                             items = new
                             {
                                 type = "string",
-                                @enum = new[] { "nachtleben", "shopping", "wandern" }
+                                @enum = new[] { "nachtleben", "shopping", "wandern", "party", "feiern", "läden", "geschäfte" }
                             }
                         },
                         kueche = new
@@ -154,9 +156,19 @@ gib
             string jsonAnfrage = JsonSerializer.Serialize(anfrage);
             var content = new StringContent(jsonAnfrage, Encoding.UTF8, "application/json");
 
-            HttpResponseMessage antwort = await httpClient.PostAsync(OllamaUrl, content);
+            HttpResponseMessage antwort;
 
-            string antwortText = await antwort.Content.ReadAsStringAsync();
+            string antwortText;
+            try
+            {
+                antwort = await httpClient.PostAsync(OllamaUrl, content);
+                antwort.EnsureSuccessStatusCode();
+                antwortText = await antwort.Content.ReadAsStringAsync();
+            }
+            catch(HttpRequestException)
+            {
+                return null;
+            }
 
             using (JsonDocument doc = JsonDocument.Parse(antwortText))
             {

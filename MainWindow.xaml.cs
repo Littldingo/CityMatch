@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Windows;
@@ -39,7 +40,7 @@ namespace CityMatch
                 NachrichtHinzufuegen("Bitte beschreiben Sie die Reisewünsche mit mindestens einem Satz", false);
                 return;
             }
-            else if (eingabe.Length >= 200)
+            else if (eingabe.Length >= 400)
             {
                 NachrichtHinzufuegen("Bitte fassen Sie sich kürzer, die Anfrage konnte nicht verarbeitet werden", false);
                 return;
@@ -48,11 +49,18 @@ namespace CityMatch
             // Lade-Anzeige hinzufügen und Referenz merken
             var ladeBubble = NachrichtHinzufuegenMitRueckgabe("Suche läuft...", false);
 
+
             // KI-Antwort holen
             string antwortJson = await ollama.FrageStellen(eingabe);
 
-            // Lade-Bubble entfernen, sobald die Antwort da ist
+           // Lade-Bubble entfernen, sobald die Antwort da ist
             ChatPanel.Children.Remove(ladeBubble);
+
+            if (string.IsNullOrEmpty(antwortJson))
+            {
+                NachrichtHinzufuegen("Die Suche ist derzeit nicht verfügbar. Bitte prüfen Sie, ob der KI-Dienst läuft, und versuchen Sie es erneut.", false);
+                return;
+            }
 
             // JSON parsen mit try/catch
             SuchKriterien kriterien;
@@ -73,6 +81,12 @@ namespace CityMatch
                 NachrichtHinzufuegen("Die KI hat keine verwertbare Antwort geliefert. Bitte versuchen Sie es erneut.", false);
                 return;
             }
+
+            // Filter: nur charakter durch den Türsteher (da halluziniert Phi)
+            var dbSyn = new DatenbankZugriff();
+            var synonyme = dbSyn.SynonymeLaden();
+            kriterien.charakter = TagFilter.FiltereListe(kriterien.charakter, eingabe, synonyme);
+            kriterien.groesse = TagFilter.GroesseErkennen(eingabe);
 
             // Tags sammeln
             var alleTags = new List<string>();
@@ -98,7 +112,7 @@ namespace CityMatch
 
             // Datenbank abfragen
             var db = new DatenbankZugriff();
-            var ergebnisse = db.FindeStaedte(alleTags);
+            var ergebnisse = db.FindeStaedte(alleTags.Distinct().ToList());
 
             if (ergebnisse.Count == 0)
             {
