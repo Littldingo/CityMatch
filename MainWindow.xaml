@@ -32,7 +32,7 @@
                     <ScrollViewer BorderBrush="#CCC" BorderThickness="1" Background="AliceBlue" Height="250"  x:Name="ChatScroll" VerticalScrollBarVisibility="Visible">
                         <Grid>
                             <TextBlock x:Name="BegrüßungsText" FontSize="25">
-                                Hallo mein Name ist Egon!
+                                Hallo, mein Name ist Egon!
                             <LineBreak/>
                              Geben Sie hier die Kundenwünsche ein.
                             </TextBlock>

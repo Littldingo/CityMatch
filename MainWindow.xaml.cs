@@ -98,17 +98,19 @@ namespace CityMatch
             alleTags.AddRange(kriterien.kueche);
             alleTags.AddRange(kriterien.groesse);
 
-            // Debug-Ausgabe im Chat
-            NachrichtHinzufuegen(
-                "[Debug] Erkannte Tags:\n" +
-                $"Klima: {string.Join(", ", kriterien.klima)}\n" +
-                $"Landschaft: {string.Join(", ", kriterien.landschaft)}\n" +
-                $"Charakter: {string.Join(", ", kriterien.charakter)}\n" +
-                $"Kultur: {string.Join(", ", kriterien.kultur)}\n" +
-                $"Aktivität: {string.Join(", ", kriterien.aktivitaet)}\n" +
-                $"Küche: {string.Join(", ", kriterien.kueche)}\n" +
-                $"Größe: {string.Join(", ", kriterien.groesse)}",
-                false);
+            /* Debug-Ausgabe im Chat
+              
+            nachrichthinzufuegen(
+            "[debug] erkannte tags:\n" +
+            /$"klima: {string.join(", ", kriterien.klima)}\n" +
+            $"landschaft: {string.join(", ", kriterien.landschaft)}\n" +
+            $"charakter: {string.join(", ", kriterien.charakter)}\n" +
+            $"kultur: {string.join(", ", kriterien.kultur)}\n" +
+            $"aktivität: {string.join(", ", kriterien.aktivitaet)}\n" +
+            $"küche: {string.join(", ", kriterien.kueche)}\n" +
+            $"größe: {string.join(", ", kriterien.groesse)}",
+            false);
+            */
 
             // Datenbank abfragen
             var db = new DatenbankZugriff();
@@ -118,6 +120,10 @@ namespace CityMatch
             {
                 NachrichtHinzufuegen("Es konnten keine Ziele gefunden werden, bitte versuchen Sie eine andere Beschreibung", false);
                 return;
+            }
+            else if (ergebnisse.Count == 1)
+            {
+                NachrichtHinzufuegen("Hier ist das beste Ziel:", false);
             }
             else
             {
