@@ -5,7 +5,6 @@ A WPF desktop application that finds matching travel destinations based on a fre
 
 Developed as the final project of my IT specialist training (Fachinformatiker für Anwendungsentwicklung) at BFW Schömberg.
 
-![CityMatch](docs/screenshot.png)
 
 ## How it works
 
